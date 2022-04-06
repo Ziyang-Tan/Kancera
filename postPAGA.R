@@ -41,7 +41,8 @@ ggarrange(plotlist = g_list_0, ncol = 4, nrow = 3) %>%
 ################################
 
 # subpop marker expression
-data_anno <- data %>% add_column(leiden = meta$leiden)
+data_anno <- data %>% add_column(leiden = meta$leiden,
+                                 randtrt = meta$randtrt)
 
 g_list_1 <- lapply(colnames(data), function(x){
   d <- data_anno %>% select(x, leiden) %>% rename(marker_expression = x)
@@ -59,6 +60,46 @@ ggarrange(plotlist = g_list_1, ncol = 5, nrow = 9) %>%
   ggexport(filename = file.path(getwd(), '../figures', paste0(sub_name, '_cluster_marker_expressions.pdf')),
            width = 20,
            height = 40)
+################################
+# subpop marker expression separate placebo/treatment
+
+g_list_1_1 <- lapply(colnames(data), function(x){
+  d <- data_anno %>% 
+    filter(randtrt == 'PLACEBO') %>%
+    select(all_of(x), leiden) %>% rename(marker_expression = x)
+  ggplot(d, 
+         aes(x = marker_expression, y = leiden, fill = leiden)) +
+    geom_density_ridges(scale = 4, rel_min_height=.01) +
+    scale_fill_manual(values = wes_palette("Rushmore1", nlevels(meta$leiden), type = "continuous")) +
+    theme_ridges() + 
+    theme(legend.position = "none") +
+    xlim(quantile(d$marker_expression, 0.01),
+         quantile(d$marker_expression, 0.99)) +
+    labs(title = x)
+})
+ggarrange(plotlist = g_list_1_1, ncol = 5, nrow = 9) %>% 
+  ggexport(filename = file.path(getwd(), '../figures', paste0(sub_name, '_cluster_marker_expressions_PLACEBO.pdf')),
+           width = 20,
+           height = 40)
+g_list_1_2 <- lapply(colnames(data), function(x){
+  d <- data_anno %>% 
+    filter(randtrt == 'KAND567') %>%
+    select(all_of(x), leiden) %>% rename(marker_expression = x)
+  ggplot(d, 
+         aes(x = marker_expression, y = leiden, fill = leiden)) +
+    geom_density_ridges(scale = 4, rel_min_height=.01) +
+    scale_fill_manual(values = wes_palette("Rushmore1", nlevels(meta$leiden), type = "continuous")) +
+    theme_ridges() + 
+    theme(legend.position = "none") +
+    xlim(quantile(d$marker_expression, 0.01),
+         quantile(d$marker_expression, 0.99)) +
+    labs(title = x)
+})
+ggarrange(plotlist = g_list_1_2, ncol = 5, nrow = 9) %>% 
+  ggexport(filename = file.path(getwd(), '../figures', paste0(sub_name, '_cluster_marker_expressions_KAND567.pdf')),
+           width = 20,
+           height = 40)
+
 
 ################################
 # subpop freq change by subject
